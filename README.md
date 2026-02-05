@@ -41,3 +41,11 @@ Use Cipher Stacking on the encrypted stuff ??
 
 
 
+# To do List
+1. Deposit money - 3 times you can try the PIN, and then log out of session
+2. 
+
+# Successful progress
+1. Make new account function is inputting username and pin properly
+2. Deposit money function is checking for user properly, and we're able to deposit money
+3. Created a good function for clearing input stream to prevent buffer overflows
