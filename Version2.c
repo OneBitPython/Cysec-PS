@@ -1,4 +1,3 @@
-```
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -30,7 +29,7 @@ struct account
   char *username;
   char *pan;
   char *cvv;
-  long long pin;
+  char *pin;
   long long int balance;
   long long int loan_amt;
   long long int fd;
@@ -78,7 +77,24 @@ long long int input_num(int len, int mode)
   return to_return;
 }
 
+void input_hex(char *str, int len)
+{
+  char toinput[len+1];
+  for (int i = 0 ; i < len ; i++)
+  {
+    fgets(toinput+i, 2, stdin);
 
+    if ((toinput[i] >= '0' && toinput[i] <= '9') || (toinput[i] >= 'a' && toinput[i] <= 'f'))
+    {
+      str[i] = toinput[i];
+    }
+    else
+    {
+      str[0] = 'z';
+      return;
+    }
+  }
+}
 
 void new_acc(struct account data[], int curr)
 {
@@ -93,78 +109,89 @@ void new_acc(struct account data[], int curr)
     printf("Invalid Username\n");
     return;
   }
-  printf("Username: %s", data[curr].username);
+  // printf("Username: %s", data[curr].username);
 
   while(1){
-    printf("Enter the pin you want to set(8 digits): ");
-    long long int temp_pin = input_num(8,0);
-    if (temp_pin == -1)
+    printf("Enter the pin you want to set(6 digits): ");
+    data[curr].pin = (char *)malloc(sizeof(char)*7);
+    input_hex(data[curr].pin, 6);
+    if ((data[curr].pin)[0] == 'z')
     {
       printf("Enter valid pin\n");
-      continue;
+      clear_stdin();
     }
     else
     {
-      printf("Successfully set PIN to %lld\n", temp_pin);
+      printf("Successfully set PIN to %s\n", data[curr].pin);
       clear_stdin();
-      data[curr].pin = temp_pin;
-      data[curr].balance = 0;
       break;
     }
-    clear_stdin();
   }
 }
 
-void deposit(struct account data[]){
+void deposit(struct account data[])
+{
   printf("Enter your username: ");
-
-  char* user = (char*)malloc(sizeof(char) * 21);
-
+  char *user = (char *)malloc(sizeof(char) * 21);
   fgets(user, 21, stdin);
   clear_stdin_str(user);
 
-  int pos = -1;
-  printf("came here\n");
-  for(int i = 0;i<curr;++i){
-    if(strncmp(data[i].username, user, 21) == 0){
-      pos = i;
-      break;
-    }
+  for (int i = 0 ; i < curr ; i++)
+  {
+    
   }
-  printf("%d\n", pos);
-  if(pos == -1){
-    printf("No such user\n");
-    return;
-  }
-  long long int pin;
-  while(1){
-    printf("Enter pin: ");
-    pin = input_num(8,0);
-    clear_stdin();
-    if(pin != -1)break;
-  }
-
-  if(data[pos].pin == pin){
-    printf("Successfull logged in to account\n");
-    printf("Enter the amount you want to deposit: ");
-    long long int deposit;
-    deposit = input_num(10,1);
-    printf("came here\n");
-    clear_stdin();
-    printf("%lld\n", deposit);
-
-    if(deposit==-1){
-      printf("Invalid number entered\n");
-    }else{
-      data[pos].balance += deposit;
-      printf("Your remaining ballance is %lld\n", data[pos].balance);
-    }
-
-  }else{
-    printf("Invalid PIN\n");
-  }
-
 }
+
+// void deposit(struct account data[]){
+//   printf("Enter your username: ");
+
+//   char* user = (char*)malloc(sizeof(char) * 21);
+
+//   fgets(user, 21, stdin);
+//   clear_stdin_str(user);
+
+//   int pos = -1;
+//   printf("came here\n");
+//   for(int i = 0;i<curr;++i){
+//     if(strncmp(data[i].username, user, 21) == 0){
+//       pos = i;
+//       break;
+//     }
+//   }
+//   printf("%d\n", pos);
+//   if(pos == -1){
+//     printf("No such user\n");
+//     return;
+//   }
+//   long long int pin;
+//   while(1){
+//     printf("Enter pin: ");
+//     pin = input_num(8,0);
+//     clear_stdin();
+//     if(pin != -1)break;
+//   }
+
+//   if(data[pos].pin == pin){
+//     printf("Successfull logged in to account\n");
+//     printf("Enter the amount you want to deposit: ");
+//     long long int deposit;
+//     deposit = input_num(10,1);
+//     printf("came here\n");
+//     clear_stdin();
+//     printf("%lld\n", deposit);
+
+//     if(deposit==-1){
+//       printf("Invalid number entered\n");
+//     }else{
+//       data[pos].balance += deposit;
+//       printf("Your remaining ballance is %lld\n", data[pos].balance);
+//     }
+
+//   }else{
+//     printf("Invalid PIN\n");
+//   }
+
+// }
 
 int main()
 {
@@ -195,7 +222,7 @@ int main()
       break;
 
       case 4:
-      deposit(data);
+      // deposit(data);
       break;
 
       case 5:
@@ -215,4 +242,4 @@ int main()
     }
     query = -1;
   }
-}```
+}
