@@ -3,7 +3,8 @@
 #include <stdlib.h>
 
 #define MAX 100
-long long int curr;
+#define USER_MAX 32
+int curr;
 char ad[5] = "ADMIN";
 
 void clear_stdin()
@@ -32,10 +33,10 @@ struct account
   char *pan;
   char *cvv;
   char *pin;
-  long long int balance;
-  long long int loan_amt;
-  long long int fd;
-  long long int interest_fd;
+  int balance;
+  int loan_amt;
+  int fd;
+  int interest_fd;
 };
 
 void print_menu(){
@@ -51,11 +52,11 @@ void print_menu(){
   printf("8) Liquidate an FD\n");
 }
 
-long long int input_num(int len, int mode)
+int input_num(int len, int mode)
 {
   //mode = 0 means it has to be exactly 'len' length, otherwise it can be anything less than 'len'
   char toinput[len+1];
-  long long int to_return = 0;
+  int to_return = 0;
   for (int i = 0 ; i < len ; i++)
   {
     fgets(toinput+i, 2, stdin);
@@ -122,11 +123,22 @@ void input_hex(char *str, int len, int mode)
 void new_acc(struct account data[], int curr)
 {
   char c;
-  data[curr].username = (char *)malloc(sizeof(char)*21);
+  char *temp_username = (char *)malloc(sizeof(char)*(USER_MAX+1));
   printf("Enter your username: ");
-  fgets(data[curr].username, 21, stdin);
-  clear_stdin_str(data[curr].username);
+  fgets(temp_username, (USER_MAX+1), stdin);
+  clear_stdin_str(temp_username);
 
+  for (int i = 0 ; i < curr ; i++)
+  {
+    if (strncmp(temp_username, data[i].username, strlen(temp_username)) == 0 && strlen(temp_username) == strlen(data[i].username))
+    {
+        printf("User already exists\n\n\n");
+        return;
+    }
+  }
+  
+  data[curr].username = (char *)malloc(sizeof(char) * (USER_MAX+1));
+  strncpy(data[curr].username, temp_username, strlen(temp_username));
   if (strncmp(data[curr].username, ad, 5) == 0)
   {
     printf("Invalid Username\n");
@@ -154,14 +166,14 @@ void new_acc(struct account data[], int curr)
 void deposit(struct account data[])
 {
   printf("Enter your username: ");
-  char *user = (char *)malloc(sizeof(char) * 21);
-  fgets(user, 21, stdin);
+  char *user = (char *)malloc(sizeof(char) * (USER_MAX+1));
+  fgets(user, (USER_MAX+1), stdin);
   clear_stdin_str(user);
 
   int pos = -1;
   for (int i = 0 ; i < curr ; i++)
   {
-    if (strncmp(data[i].username, user, 21) == 0)
+    if (strncmp(data[i].username, user, USER_MAX) == 0)
     {
       pos = i;
       break;
@@ -219,7 +231,7 @@ int main()
   struct account data[MAX];
   curr = 0;
 
-  long long int query = -1;
+  int query = -1;
   while (1)
   {
     print_menu();
