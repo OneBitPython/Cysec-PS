@@ -5,6 +5,25 @@
 #define MAX 100
 long long int curr;
 char ad[5] = "ADMIN";
+
+void clear_stdin()
+{
+    int c;
+    while((c = getchar()) != '\n');
+}
+
+void clear_stdin_str(char *str)
+{
+    if (str[strlen(str)-1] != '\n')
+    {
+        // printf("Clearing stdin\n");
+        clear_stdin();
+    }
+    else
+    {
+        str[strlen(str)-1] = '\0';
+    }
+}
 struct account
 {
   char *username;
@@ -48,7 +67,9 @@ long long int input_num(int len, int mode)
     {
       if(mode == 0)return -1;
       else{
-        if(toinput[i] == '\n')break;
+        if(toinput[i] == '\n'){
+          break;
+        }
         return -1;
       }
     }
@@ -56,17 +77,7 @@ long long int input_num(int len, int mode)
   return to_return;
 }
 
-void clear_stdin() {
-    int c;
-    while ((c = getchar()) != '\n');
-}
-void printstream(){
-      int c;
-    while ((c = getchar()) != '\n') {
-        putchar(c);
-    }
 
-}
 
 void new_acc(struct account data[], int curr)
 {
@@ -74,6 +85,8 @@ void new_acc(struct account data[], int curr)
   data[curr].username = (char *)malloc(sizeof(char)*21);
   printf("Enter your username: ");
   fgets(data[curr].username, 21, stdin);
+  clear_stdin_str(data[curr].username);
+
   if (strncmp(data[curr].username, ad, 5) == 0)
   {
     printf("Invalid Username\n");
@@ -107,7 +120,7 @@ void deposit(struct account data[]){
   char* user = (char*)malloc(sizeof(char) * 21);
 
   fgets(user, 21, stdin);
-  clear_stdin();
+  clear_stdin_str(user);
 
   int pos = -1;
   printf("came here\n");
@@ -126,17 +139,24 @@ void deposit(struct account data[]){
   while(1){
     printf("Enter pin: ");
     pin = input_num(8,0);
+    clear_stdin();
     if(pin != -1)break;
   }
+
   if(data[pos].pin == pin){
     printf("Successfull logged in to account\n");
     printf("Enter the amount you want to deposit: ");
     long long int deposit;
     deposit = input_num(10,1);
+    printf("came here\n");
+    clear_stdin();
+    printf("%lld\n", deposit);
+
     if(deposit==-1){
       printf("Invalid number entered\n");
     }else{
       data[pos].balance += deposit;
+      printf("Your remaining ballance is %lld\n", data[pos].balance);
     }
 
   }else{
