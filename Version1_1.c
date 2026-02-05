@@ -26,16 +26,16 @@ void print_menu(){
   printf("5) Get a Loan from the Admin\n");
   printf("6) Create an FD\n");
   printf("7) Liquidate an FD\n");
+  printf("Enter your option: ");
 }
 
 long long int input_num(int len)
 {
-  printf("Entered");
   char toinput[len+1];
+  toinput[len] = '\0';
   long long int to_return = 0;
   for (int i = 0 ; i < len ; i++)
   {
-    printf("%d", i);
     fgets(toinput+i, 2, stdin);
     if (toinput[i] >= '0' && toinput[i] <= '9')
     {
