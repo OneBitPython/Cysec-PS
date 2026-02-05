@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #define MAX 100
+long long int curr;
 char ad[5] = "ADMIN";
 struct account
 {
@@ -22,21 +23,22 @@ void print_menu(){
   printf("1) Create a New Account\n");
   printf("2) Change PIN of an Existing Account\n");
   printf("3) Get Balance of an Account\n");
-  printf("4) Withdraw Money from an Account\n");
-  printf("5) Get a Loan from the Admin\n");
-  printf("6) Create an FD\n");
-  printf("7) Liquidate an FD\n");
+  printf("4) Deposit money into account\n");
+  printf("5) Withdraw Money from an Account\n");
+  printf("6) Get a Loan from the Admin\n");
+  printf("7) Create an FD\n");
+  printf("8) Liquidate an FD\n");
 }
 
-long long int input_num(int len)
+long long int input_num(int len, int mode)
 {
-  printf("Entered");
+  //mode = 0 means it has to be exactly 'len' length, otherwise it can be anything less than 'len'
   char toinput[len+1];
   long long int to_return = 0;
   for (int i = 0 ; i < len ; i++)
   {
-    printf("%d", i);
     fgets(toinput+i, 2, stdin);
+
     if (toinput[i] >= '0' && toinput[i] <= '9')
     {
       to_return *= 10;
@@ -44,18 +46,34 @@ long long int input_num(int len)
     }
     else
     {
-      return -1;
+      if(mode == 0)return -1;
+      else{
+        if(toinput[i] == '\n')break;
+        return -1;
+      }
     }
   }
   return to_return;
+}
+
+void clear_stdin() {
+    int c;
+    while ((c = getchar()) != '\n');
+}
+void printstream(){
+      int c;
+    while ((c = getchar()) != '\n') {
+        putchar(c);
+    }
+
 }
 
 void new_acc(struct account data[], int curr)
 {
   char c;
   data[curr].username = (char *)malloc(sizeof(char)*21);
-  printf("\nEnter your username: ");
-  fgets(data[curr].username, 20, stdin);
+  printf("Enter your username: ");
+  fgets(data[curr].username, 21, stdin);
   if (strncmp(data[curr].username, ad, 5) == 0)
   {
     printf("Invalid Username\n");
@@ -63,32 +81,82 @@ void new_acc(struct account data[], int curr)
   }
   printf("Username: %s", data[curr].username);
 
-  printf("Enter the pin you want to set(8 digits): ");
-  long long int temp_pin = input_num(8);
-  if (temp_pin == -1)
-  {
-    printf("Enter valid pin\n");
-    new_acc(data, curr);
+  while(1){
+    printf("Enter the pin you want to set(8 digits): ");
+    long long int temp_pin = input_num(8,0);
+    if (temp_pin == -1)
+    {
+      printf("Enter valid pin\n");
+      continue;
+    }
+    else
+    {
+      printf("Successfully set PIN to %lld\n", temp_pin);
+      clear_stdin();
+      data[curr].pin = temp_pin;
+      data[curr].balance = 0;
+      break;
+    }
+    clear_stdin();
   }
-  else
-  {
-    data[curr].pin = temp_pin;
+}
+
+void deposit(struct account data[]){
+  printf("Enter your username: ");
+
+  char* user = (char*)malloc(sizeof(char) * 21);
+
+  fgets(user, 21, stdin);
+  clear_stdin();
+
+  int pos = -1;
+  printf("came here\n");
+  for(int i = 0;i<curr;++i){
+    if(strncmp(data[i].username, user, 21) == 0){
+      pos = i;
+      break;
+    }
   }
-  fflush(NULL);
+  printf("%d\n", pos);
+  if(pos == -1){
+    printf("No such user\n");
+    return;
+  }
+  long long int pin;
+  while(1){
+    printf("Enter pin: ");
+    pin = input_num(8,0);
+    if(pin != -1)break;
+  }
+  if(data[pos].pin == pin){
+    printf("Successfull logged in to account\n");
+    printf("Enter the amount you want to deposit: ");
+    long long int deposit;
+    deposit = input_num(10,1);
+    if(deposit==-1){
+      printf("Invalid number entered\n");
+    }else{
+      data[pos].balance += deposit;
+    }
+
+  }else{
+    printf("Invalid PIN\n");
+  }
+
 }
 
 int main()
 {
   struct account data[MAX];
-  int curr = 0;
+  curr = 0;
 
   long long int query = -1;
-  while (true)
+  while (1)
   {
     print_menu();
     //scanf("%lld", &query);
-    query = input_num(1);
-    getchar();
+    query = input_num(1,0);
+    clear_stdin();
     // printf("%d\n", query);
     switch(query)
     {
@@ -106,7 +174,7 @@ int main()
       break;
 
       case 4:
-      // withdraw(data);
+      deposit(data);
       break;
 
       case 5:
