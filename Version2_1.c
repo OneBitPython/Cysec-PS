@@ -122,7 +122,6 @@ void input_hex(char *str, int len, int mode)
 
 void new_acc(struct account data[], int curr)
 {
-  char c;
   char *temp_username = (char *)malloc(sizeof(char)*(USER_MAX+1));
   printf("Enter your username: ");
   fgets(temp_username, (USER_MAX+1), stdin);
@@ -160,6 +159,72 @@ void new_acc(struct account data[], int curr)
       printf("Successfully set PIN to %s\n\n\n", data[curr].pin);
       break;
     }
+  }
+}
+
+void change_pin(struct account data[])
+{
+  char *temp_user;
+  temp_user = malloc(sizeof(char) * (USER_MAX+1));
+  printf("Enter the username: ");
+  fgets(temp_user, USER_MAX+1, stdin);
+  clear_stdin_str(temp_user);
+  int pos = -1;
+  for (int i = 0 ; i < curr ; i++)
+  {
+    if (strncmp(data[i].username, temp_user, USER_MAX) == 0)
+    {
+      pos = i;
+      break;
+    }
+  }
+
+  if (pos == -1)
+  {
+    printf("User doesn't exist\n\n\n");
+    return;
+  }
+
+  printf("Enter the existing PIN: ");
+  char *temp_pin;
+  temp_pin = (char *)malloc(sizeof(char) * 7);
+  input_hex(temp_pin, 6, 0);
+  clear_stdin_str(temp_pin);
+  if (temp_pin[0] == 'z' || strncmp(temp_pin, data[pos].pin, 6) != 0)
+  {
+    printf("Invalid PIN entered. Exiting process\n\n\n");
+    return;
+  }
+
+  printf("Enter new PIN: ");
+  char *new_pin1;
+  new_pin1 = (char *)malloc(sizeof(char) * 7);
+  input_hex(new_pin1, 6, 0);
+  clear_stdin_str(new_pin1);
+  if (new_pin1[0] == 'z')
+  {
+    printf("Invalid PIN entered. Exiting process\n\n\n");
+    return;
+  }
+  printf("Enter the PIN again: ");
+  char *new_pin2;
+  new_pin2 = (char *)malloc(sizeof(char) * 7);
+  input_hex(new_pin2, 6, 0);
+  clear_stdin_str(new_pin2);
+  if (new_pin2[0] == 'z')
+  {
+    printf("Invalid PIN entered. Exiting process\n\n\n");
+    return;
+  }
+  else if (strncmp(new_pin2, new_pin1, 6) != 0)
+  {
+    printf("PINs don't match. Exiting process\n\n\n");
+  }
+  else
+  {
+    strncpy(data[pos].pin, new_pin1, 6);
+    printf("PIN successfully changed to %s\n\n\n", data[pos].pin);
+    return;
   }
 }
 
@@ -247,7 +312,7 @@ int main()
       break;
 
       case 2:
-      // change_pin(data);
+      change_pin(data);
       break;
 
       case 3:
