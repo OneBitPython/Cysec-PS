@@ -1,11 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void clear_stdin()
 {
   // printf("clear_stdin\n");
   int c;
   while((c = getchar()) != '\n');
+}
+
+void clear_stdin_str(char *str)
+{
+  // printf("clear_stdin_str\n");
+    if (str[strlen(str)-1] != '\n')
+    {
+        // printf("Clearing stdin\n");
+        clear_stdin();
+    }
+    else
+    {
+        str[strlen(str)-1] = '\0';
+    }
 }
 
 int s_box[256] = {0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
@@ -108,7 +123,14 @@ void make_state(int state[4][4], char *str)
     for (int j = 0 ; j < 4 ; j++)
     {
       // printf("%d%d ", i, j);
-      state[j][i] = asc(str[4*i + j]);
+      if ((4*i + j) < strlen(str))
+      {
+        state[j][i] = asc(str[4*i + j]);
+      }
+      else
+      {
+        state[j][i] = 16 - strlen(str);
+      }
     }
   }
   // for (int i = 0 ; i < 4 ; i++)
@@ -286,7 +308,7 @@ int main()
   printf("Key: %s\n", key);
   printf("Enter the string: ");
   fgets(str, 17, stdin);
-  clear_stdin();
+  clear_stdin_str(str);
 
   int state[4][4];
   make_state(state, str);
