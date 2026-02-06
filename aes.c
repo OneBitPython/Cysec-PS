@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 
+void clear_stdin()
+{
+  // printf("clear_stdin\n");
+  int c;
+  while((c = getchar()) != '\n');
+}
+
 int asc(char c)
 {
     return (int)c;
@@ -104,8 +111,7 @@ int add_round_key(int state[4][4], int expanded[44][4], int i, int j, int round)
 
 int sub_bytes(int state[4][4], int s_box[256], int i, int j)
 {
-    int temp = s_box[state[i][j]];
-    return state[i][j] ^ temp;
+    return s_box[state[i][j]];
 }
 int shift_rows(int state[4][4], int i, int j)
 {
@@ -163,7 +169,10 @@ Inverse S_box:
 int main()
 {
     int key[4][4];
-    char k[32] = {'2','b','7','e','1','5','1','6','2','8','a','e','d','2','a','6','a','b','f','7','9','7','6','6','7','6','1','5','1','3','0','1',};
+    char k[33];
+    printf("Enter the key: ");
+    fgets(k, 33, stdin);
+    clear_stdin();
     int pos = 0;
     for (int i = 0 ; i < 4 ; i++)
     {
@@ -232,7 +241,7 @@ int main()
         {
             for (int j = 0 ; j < 4 ; j++)
             {
-                printf("%02X", expanded[4*round + j][i]);
+                printf("%02X ", expanded[4*round + j][i]);
             }
         }
         printf("\n");
@@ -240,9 +249,10 @@ int main()
     }
 
     int state[4][4];
-    char str[16];
+    char str[17];
     fprintf(stdout, "Enter your message: ");
-    scanf("%s", str);
+    fgets(str, 17, stdin);
+    clear_stdin();
     for (int i = 0;  i < 4 ; i++)
     {
         for (int j = 0 ; j < 4 ; j++)
@@ -277,6 +287,14 @@ int main()
 
     for (int round = 0 ; round <= 10 ; round++)
     {
+        for (int i = 0 ; i < 4 ; i++)
+        {
+            for (int j = 0 ; j < 4 ; j++)
+            {
+                printf("%02X ", state[j][i]);
+            }
+        }
+        printf("\n");
         if (round == 0)
         {
             //Add round key
@@ -304,9 +322,14 @@ int main()
             //Shift rows
             for (int i = 0 ; i < 4 ; i++)
             {
+                int arr[4];
                 for (int j = 0 ; j < 4 ; j++)
                 {
-                    state[i][j] = shift_rows(state, i, j);
+                    arr[j] = shift_rows(state, i, j);
+                }
+                for (int j = 0 ; j < 4 ; j++)
+                {
+                    state[i][j] = arr[j];
                 }
             }
 
@@ -334,18 +357,31 @@ int main()
             //Shift rows
             for (int i = 0 ; i < 4 ; i++)
             {
+                int arr[4];
                 for (int j = 0 ; j < 4 ; j++)
                 {
-                    state[i][j] = shift_rows(state, i, j);
+                    arr[j] = shift_rows(state, i, j);
+                }
+                for (int j = 0 ; j < 4 ; j++)
+                {
+                    state[i][j] = arr[j];
                 }
             }
 
             //Mix columns
+            int temp_mix[4][4];
             for (int i = 0 ; i < 4 ; i++)
             {
                 for (int j = 0 ; j < 4 ; j++)
                 {
-                    state[i][j] = mix_columns(state, i, j);
+                    temp_mix[i][j] = mix_columns(state, i, j);
+                }
+            }
+            for (int i = 0 ; i < 4 ; i++)
+            {
+                for (int j = 0 ; j < 4 ; j++)
+                {
+                    state[i][j] = temp_mix[i][j];
                 }
             }
 
