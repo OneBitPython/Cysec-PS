@@ -76,8 +76,9 @@ void print_menu(){
 
 int input_num(int len, int mode)
 {
-  //mode = 0 means it has to be exactly 'len' length, otherwise it can be anything less than 'len'
+  //mode = 0 means it has to be exactly 'len' length, otherwise it can be anything less than equal to 'len'
   char toinput[len+1];
+  toinput[len] = '\0';
   int to_return = 0;
   for (int i = 0 ; i < len ; i++)
   {
@@ -86,19 +87,25 @@ int input_num(int len, int mode)
     if (toinput[i] >= '0' && toinput[i] <= '9')
     {
       to_return *= 10;
-      to_return += (long long)(toinput[i] - '0');
+      to_return += toinput[i] - '0';
     }
     else
     {
-      if(mode == 0)return -1;
+      if(mode == 0)
+      {
+        clear_stdin_str(toinput);
+        return -1;
+      }
       else{
         if(toinput[i] == '\n'){
-          break;
+          clear_stdin_str(toinput);
+          return to_return;
         }
         return -1;
       }
     }
   }
+  clear_stdin();
   return to_return;
 }
 
@@ -129,7 +136,6 @@ void input(char *str, int len, int mode, int allowhex)
         {
           str[i] = '\n';
           str[i+1] = '\0';
-          return;
         }
         str[0] = 'z';
         return;
@@ -311,8 +317,15 @@ void liquidate_fd(struct account data[]){
     clear_stdin_str(temp_pin);
     if (temp_pin[0] == 'z' || strncmp(data[pos].pin, temp_pin, 6) != 0)
     {
-      if (times != 3) printf("PIN doesn't match. ");
-      else printf("Exhausted 3 attempts\n\n\n"), return;
+      if (times != 3)
+      {
+        printf("PIN doesn't match ");
+      }
+      else
+      {
+        printf("Exhausted 3 attempts\n\n\n");
+        return;
+      }
     }
     else
     {
@@ -434,6 +447,11 @@ void change_pin(struct account data[])
   if (new_pin1[0] == 'z')
   {
     printf("Invalid PIN entered. Exiting process\n\n\n");
+    return;
+  }
+  else if (strncmp(new_pin1, temp_pin, 6) == 0)
+  {
+    printf("Can't change PIN to existing PIN. Exiting process \n\n\n");
     return;
   }
   printf("Enter the PIN again: ");
@@ -743,12 +761,20 @@ void print_balance(struct account data[])
     clear_stdin_str(temp_pin);
     if (temp_pin[0] == 'z' || strncmp(data[pos].pin, temp_pin, 6) != 0)
     {
-      printf("PIN doesn't match, ");
+      if (times != 3)
+      {
+        printf("PIN doesn't match, ");
+      }
+      else
+      {
+        printf("3 attempts exhausted\n\n\n");
+      }
     }
     else
     {
       printf("Successfully logged in to account\n");
       printf("Your balance now is %lld\n\n\n", data[pos].balance);
+      break;
     }
   }
 }
@@ -761,8 +787,8 @@ int main()
   {
     print_menu();
     //scanf("%lld", &query);
-    query = input_num(1,0);
-    clear_stdin();
+    query = input_num(2,1);
+    // clear_stdin();
     // printf("%d\n", query);
     switch(query)
     {
@@ -793,12 +819,18 @@ int main()
       case 7:
       make_transaction(data);
       break;
+
+      case 8:
+      break;
+
       case 9:
       create_fd(data);
       break;
+
       case 10:
       liquidate_fd(data);
       break;
+      
       default:
       printf("Enter a valid option\n\n");
     }
