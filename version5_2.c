@@ -10,6 +10,14 @@
 int curr;
 char ad[5] = "ADMIN";
 
+void delay_random(){
+  struct timespec timestruct;
+  float del = ((float)rand()/(float)RAND_MAX);
+  timestruct.tv_sec = 2;
+  timestruct.tv_nsec = del*1000000000;
+  nanosleep(&timestruct,&timestruct);
+}
+
 void clear_stdin()
 {
   // printf("clear_stdin\n");
@@ -641,10 +649,12 @@ void withdraw(struct account data[]){
     {
         if (times != 3)
         {
+            delay_random();
             printf("Invalid PIN, ");
         }
         else
         {
+            delay_random();;
             printf("3 attempts exhausted\n\n\n");
         }
     }
@@ -652,10 +662,12 @@ void withdraw(struct account data[]){
     {
         if (times != 3)
         {
+            delay_random();
             printf("PIN doesn't match, ");
         }
         else
         {
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
         }
     }
@@ -738,19 +750,22 @@ void liquidate_fd(struct account data[]){
     if (temp_pin[0] == 'z')
     {
         if (times == 3)
-        {
+        {   delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
+      delay_random();
       printf("Invalid PIN, ");
     }
     else if (strncmp(data[pos].pin, enc_pin, 32) != 0)
     {
         if (times == 3)
         {
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
+        delay_random();
         printf("PIN doesn't match, ");
     }
     else
@@ -802,18 +817,22 @@ void create_fd(struct account data[]){
     {
         if (times == 3)
         {
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
+      delay_random();
       printf("Invalid PIN, ");
     }
     else if (strncmp(data[pos].pin, enc_pin, 32) != 0)
     {
         if (times == 3)
         {
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
+        delay_random();
         printf("PIN doesn't match, ");
     }
     else
@@ -882,11 +901,13 @@ void change_pin(struct account data[])
   encrypt(temp_pin, enc_pin);
   if (temp_pin[0] == 'z')
   {
+    delay_random();
     printf("Invalid PIN entered. Exiting process\n\n\n");
     return;
   }
   else if (strncmp(data[pos].pin, enc_pin, 32) != 0)
   {
+    delay_random();
     printf("PIN doesn't match. Exiting process\n\n\n");
     return;
   }
@@ -966,18 +987,22 @@ void make_transaction(struct account data[]){
     {
         if (times == 3)
         {
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
+      delay_random();
       printf("Invalid PIN, ");
     }
     else if (strncmp(data[pos].pin, enc_pin, 32) != 0)
     {
         if (times == 3)
         {
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
+      delay_random();
       printf("PIN doesn't match, ");
     }
     else
@@ -1108,18 +1133,22 @@ void print_history(struct account data[]){
     {
         if (times == 3)
         {
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
+      delay_random();
       printf("Invalid PIN, ");
     }
     else if (strncmp(data[pos].pin, enc_pin, 32) != 0)
     {
         if (times == 3)
         {
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
+        delay_random();
         printf("PIN doesn't match, ");
     }
     else
@@ -1177,18 +1206,22 @@ void deposit(struct account data[])
     {
         if (times == 3)
         {
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
+        delay_random();
         printf("Invalid PIN, ");
     }
     else if (strncmp(data[pos].pin, enc_pin, 32) != 0)
     {
         if (times == 3)
         {
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
+        delay_random();
         printf("PIN doesn't match, ");
     }
     else
@@ -1270,10 +1303,12 @@ void print_balance(struct account data[])
     {
       if (times != 3)
       {
+        delay_random();
         printf("Invalid PIN, ");
       }
       else
       {
+        delay_random();
         printf("3 attempts exhausted\n\n\n");
       }
     }
@@ -1281,10 +1316,12 @@ void print_balance(struct account data[])
     {
       if (times != 3)
       {
+        delay_random();
         printf("PIN doesn't match, ");
       }
       else
       {
+        delay_random();
         printf("3 attempts exhausted\n\n\n");
       }
     }
@@ -1305,7 +1342,7 @@ int check_admin()
     fgets(pass, 17, stdin);
     clear_stdin_str(pass);
     encrypt(pass, pass_enc);
-
+    delay_random();
     //Password: xA9!Qf7$L2@RkZ#M
     char *admin_pass = (char *)malloc(sizeof(char) * 33);
     admin_pass = "42fc799587b75b4270097744d4b19255";
@@ -1838,6 +1875,7 @@ void admin(struct account data[])
 
 int main()
 {
+  srand(time(NULL));
   struct account data[MAX];
   int query = -1;
 
