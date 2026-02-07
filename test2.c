@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 void clear_stdin()
 {
@@ -75,13 +76,10 @@ void print_stream()
 
 int main()
 {
-    int query;
-    query = input_num(2, 1);
-    printf("%d\n", query);
-    // char s[2];
-    // s[1] = '\0';
-    // printf("Enter string: ");
-    // fgets(s, 2,stdin);
-    // printf("%s\n", s);
-    // print_stream();
+    char *s = (char *)malloc(sizeof(char) * 11);
+    char *str = (char *)malloc(sizeof(char) * 6);
+    fgets(s, 11, stdin);
+    clear_stdin_str(s);
+    strncpy(str, s, 5);
+    printf("%s\n", str);
 }
