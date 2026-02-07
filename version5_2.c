@@ -657,13 +657,13 @@ void withdraw(struct account data[]){
     {
         if (times != 3)
         {
-          delay_random();
+            delay_random();
             printf("Invalid PIN, ");
             free(enc);
         }
         else
         {
-          delay_random();
+            delay_random();;
             printf("3 attempts exhausted\n\n\n");
             free(enc);
         }
@@ -672,13 +672,13 @@ void withdraw(struct account data[]){
     {
         if (times != 3)
         {
-          delay_random();
+            delay_random();
             printf("PIN doesn't match, ");
             free(enc);
         }
         else
         {
-          delay_random();
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             free(enc);
         }
@@ -763,20 +763,19 @@ void liquidate_fd(struct account data[]){
     if (temp_pin[0] == 'z')
     {
         if (times == 3)
-        {
-          delay_random();
+        {   delay_random();
             printf("3 attempts exhausted\n\n\n");
             free(enc_pin);
             return;
         }
-        delay_random();
+      delay_random();
       printf("Invalid PIN, ");
     }
     else if (strncmp(data[pos].pin, enc_pin, 32) != 0)
     {
         if (times == 3)
         {
-          delay_random();
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             free(enc_pin);
             return;
@@ -834,19 +833,19 @@ void create_fd(struct account data[]){
     {
         if (times == 3)
         {
-          delay_random();
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             free(enc_pin);
             return;
         }
-        delay_random();
+      delay_random();
       printf("Invalid PIN, ");
     }
     else if (strncmp(data[pos].pin, enc_pin, 32) != 0)
     {
         if (times == 3)
         {
-          delay_random();
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             free(enc_pin);
             return;
@@ -1010,22 +1009,22 @@ void make_transaction(struct account data[]){
     {
         if (times == 3)
         {
-          delay_random();
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
-        delay_random();
+      delay_random();
       printf("Invalid PIN, ");
     }
     else if (strncmp(data[pos].pin, enc_pin, 32) != 0)
     {
         if (times == 3)
         {
-          delay_random();
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
-        delay_random();
+      delay_random();
       printf("PIN doesn't match, ");
     }
     else
@@ -1156,18 +1155,18 @@ void print_history(struct account data[]){
     {
         if (times == 3)
         {
-          delay_random();
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
-        delay_random();
+      delay_random();
       printf("Invalid PIN, ");
     }
     else if (strncmp(data[pos].pin, enc_pin, 32) != 0)
     {
         if (times == 3)
         {
-          delay_random();
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
@@ -1229,7 +1228,7 @@ void deposit(struct account data[])
     {
         if (times == 3)
         {
-          delay_random();
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
@@ -1240,7 +1239,7 @@ void deposit(struct account data[])
     {
         if (times == 3)
         {
-          delay_random();
+            delay_random();
             printf("3 attempts exhausted\n\n\n");
             return;
         }
@@ -1908,6 +1907,7 @@ void admin(struct account data[])
 
 int main()
 {
+  srand(time(NULL));
   struct account data[MAX];
   int query = -1;
 
