@@ -144,7 +144,7 @@ void make_state(int state[4][4], char *str)
 
 void key_expansion(char *key, int expanded[44][4])
 {
-  printf("Key Expansion\n");
+  // printf("Key Expansion\n");
   int k[4][4];
   int pos = 0;
   for (int i = 0 ; i < 4 ; i++)
