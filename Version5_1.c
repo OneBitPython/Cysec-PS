@@ -594,6 +594,7 @@ void new_acc(struct account data[], int *cur)
       break;
     }
   }
+//   printf("Exiting new_acc\n");
 }
 
 
@@ -1755,13 +1756,14 @@ void liquidate_fd_admin(struct account data[])
 void admin(struct account data[])
 {
     printf("\nLogging in as ADMIN\n\n");
-    print_menu_admin();
+    
     int query = -1;
-    query = input_num(2,1);
     // clear_stdin();
     // printf("%d\n", query);
     while(1)
     {
+        print_menu_admin();
+        query = input_num(2,1);
         switch(query)
         {
         case 1:
@@ -1879,6 +1881,7 @@ int main()
       
       default:
       printf("Enter a valid option\n\n");
+      break;
     }
     query = -1;
   }
