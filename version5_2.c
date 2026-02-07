@@ -6,6 +6,7 @@
 #define MAX 100
 #define USER_MAX 32
 #define MAXT 50
+#define INT_MAX 2147483647
 
 int curr;
 char ad[5] = "ADMIN";
@@ -568,6 +569,11 @@ void new_acc(struct account data[], int *cur)
   fgets(temp_username, (USER_MAX+1), stdin);
   clear_stdin_str(temp_username);
 
+  if (strlen(temp_username) == 0)
+  {
+    printf("Can't enter an empty username\n\n\n");
+    return;
+  }
   for (int i = 0 ; i < curr ; i++)
   {
     if (strncmp(temp_username, data[i].username, strlen(temp_username)) == 0 && strlen(temp_username) == strlen(data[i].username))
@@ -596,12 +602,14 @@ void new_acc(struct account data[], int *cur)
     if ((temp_pin)[0] == 'z')
     {
       printf("Enter valid pin\n\n");
+      free(temp_pin);
     }
     else
     {
       printf("Successfully set PIN to %s\n\n\n", temp_pin);
       (*cur)++;
       encrypt(temp_pin, data[curr].pin);
+      free(temp_pin);
       SAVE(data);
       break;
     }
@@ -636,7 +644,7 @@ void withdraw(struct account data[]){
     return;
   }
   int times = 0;
-  while(times <= 3)
+  while(times < 3)
   {
     times++;
     printf("Enter the PIN: ");
@@ -651,11 +659,13 @@ void withdraw(struct account data[]){
         {
             delay_random();
             printf("Invalid PIN, ");
+            free(enc);
         }
         else
         {
             delay_random();;
             printf("3 attempts exhausted\n\n\n");
+            free(enc);
         }
     }
     else if (strncmp(data[pos].pin, enc, 32) != 0)
@@ -664,11 +674,13 @@ void withdraw(struct account data[]){
         {
             delay_random();
             printf("PIN doesn't match, ");
+            free(enc);
         }
         else
         {
             delay_random();
             printf("3 attempts exhausted\n\n\n");
+            free(enc);
         }
     }
     else
@@ -710,6 +722,7 @@ void withdraw(struct account data[]){
         if(data[pos].active < MAXT)data[pos].active++;
 
         SAVE(data);
+        free(enc);
 
         break;
       }
@@ -752,6 +765,7 @@ void liquidate_fd(struct account data[]){
         if (times == 3)
         {   delay_random();
             printf("3 attempts exhausted\n\n\n");
+            free(enc_pin);
             return;
         }
       delay_random();
@@ -763,6 +777,7 @@ void liquidate_fd(struct account data[]){
         {
             delay_random();
             printf("3 attempts exhausted\n\n\n");
+            free(enc_pin);
             return;
         }
         delay_random();
@@ -777,6 +792,7 @@ void liquidate_fd(struct account data[]){
       data[pos].fd = 0;
       printf("Your balance now is %lld\n\n\n", data[pos].balance);
       SAVE(data);
+      free(enc_pin);
       break;
     }
   }
@@ -819,6 +835,7 @@ void create_fd(struct account data[]){
         {
             delay_random();
             printf("3 attempts exhausted\n\n\n");
+            free(enc_pin);
             return;
         }
       delay_random();
@@ -830,6 +847,7 @@ void create_fd(struct account data[]){
         {
             delay_random();
             printf("3 attempts exhausted\n\n\n");
+            free(enc_pin);
             return;
         }
         delay_random();
@@ -865,6 +883,7 @@ void create_fd(struct account data[]){
 
         data[pos].fd += temp;
         SAVE(data);
+        free(enc_pin);
 
         break;
       }
@@ -903,12 +922,14 @@ void change_pin(struct account data[])
   {
     delay_random();
     printf("Invalid PIN entered. Exiting process\n\n\n");
+    free(enc_pin);
     return;
   }
   else if (strncmp(data[pos].pin, enc_pin, 32) != 0)
   {
     delay_random();
     printf("PIN doesn't match. Exiting process\n\n\n");
+    free(enc_pin);
     return;
   }
 
@@ -945,6 +966,7 @@ void change_pin(struct account data[])
     encrypt(new_pin1, enc_pin_new);
     strncpy(data[pos].pin, enc_pin_new, 32);
     printf("PIN successfully changed to %s\n\n\n", new_pin1);
+    free(enc_pin_new);
     SAVE(data);
 
     return;
@@ -1246,6 +1268,11 @@ void deposit(struct account data[])
           temp *= 10;
           temp += deposit[i] - '0';
         }
+        if (INT_MAX - temp < data[pos].balance)
+        {
+          printf("Too much to deposit\n\n\n");
+          return;
+        }
         data[pos].balance += temp;
         printf("Your balance now is %lld\n\n\n", data[pos].balance);
 
@@ -1503,6 +1530,11 @@ void deposit_admin(struct account data[])
       if(deposit[i]=='\n')break;
       temp *= 10;
       temp += deposit[i] - '0';
+    }
+    if (INT_MAX - temp < data[pos].balance)
+    {
+      printf("Too much to deposit\n\n\n");
+      return;
     }
     data[pos].balance += temp;
     printf("Your balance now is %lld\n\n\n", data[pos].balance);
@@ -1829,7 +1861,7 @@ void admin(struct account data[])
         break;
 
         case 2:
-        change_pin_admin(data);
+        printf("SIKE! Can't change PIN\n\n\n");
         break;
 
         case 3:
