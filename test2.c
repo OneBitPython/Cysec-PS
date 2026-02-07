@@ -80,6 +80,5 @@ int main()
     char *str = (char *)malloc(sizeof(char) * 6);
     fgets(s, 11, stdin);
     clear_stdin_str(s);
-    strncpy(str, s, 5);
-    printf("%s\n", str);
+    printf("%d\n", strlen(s));
 }
