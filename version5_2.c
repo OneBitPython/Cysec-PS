@@ -1186,6 +1186,7 @@ void print_history(struct account data[]){
         else if(data[pos].info[i].type == 0) printf("Withdrawal of %lld made on %s\n", data[pos].info[i].amount,data[pos].info[i].time);
         else if(data[pos].info[i].type==2) printf("Transaction of %lld made to %s on %s\n", data[pos].info[i].amount,data[pos].info[i].person, data[pos].info[i].time);
         else if(data[pos].info[i].type==3) printf("Transaction of %lld made from %s on %s\n", data[pos].info[i].amount,data[pos].info[i].person, data[pos].info[i].time);
+        else if (data[pos].info[i].type == 4) printf("Deposit of %lld made by admin on %s\n", data[pos].info[i].amount,data[pos].info[i].time);
       }
       break;
     }
@@ -1369,6 +1370,7 @@ int check_admin()
     fgets(pass, 17, stdin);
     clear_stdin_str(pass);
     encrypt(pass, pass_enc);
+    printf("Checking key\n");
     delay_random();
     //Password: xA9!Qf7$L2@RkZ#M
     char *admin_pass = (char *)malloc(sizeof(char) * 33);
@@ -1389,78 +1391,15 @@ void print_menu_admin(){
   printf("1) Create a New Account\n");
   printf("2) Change PIN of an Existing Account\n");
   printf("3) Get Balance of an Account\n");
-  printf("4) Deposit money into account\n");
+  printf("4) Deposit money into an account from your account\n");
   printf("5) Withdraw Money from an Account\n");
   printf("6) Transaction History\n");
-  printf("7) Make transaction.\n");
+  printf("7) Make transaction between 2 accounts\n");
   printf("8) Get a Loan from the Admin\n");
   printf("9) Create an FD\n");
   printf("10) Liquidate an FD\n");
   printf("11) Exit admin\n");
   printf("Query: ");
-}
-
-void change_pin_admin(struct account data[])
-{
-  char temp_user[USER_MAX+2];
-  printf("Enter the username: ");
-  fgets(temp_user, USER_MAX+1, stdin);
-  clear_stdin_str(temp_user);
-  int pos = -1;
-  for (int i = 0 ; i < curr ; i++)
-  {
-    if (strncmp(data[i].username, temp_user, USER_MAX) == 0)
-    {
-      pos = i;
-      break;
-    }
-  }
-
-  if (pos == -1)
-  {
-    printf("User doesn't exist\n\n\n");
-    return;
-  }
-  
-  printf("Enter new PIN: ");
-  char new_pin1[8];
-  input(new_pin1, 6, 0,1);
-  clear_stdin_str(new_pin1);
-  char *new_pin_enc = (char *)malloc(sizeof(char) * 33);
-  encrypt(new_pin1, new_pin_enc);
-  if (new_pin1[0] == 'z')
-  {
-    printf("Invalid PIN entered. Exiting process\n\n\n");
-    return;
-  }
-  else if (strncmp(new_pin_enc, data[pos].pin, 6) == 0)
-  {
-    printf("Can't change PIN to existing PIN. Exiting process \n\n\n");
-    return;
-  }
-  printf("Enter the PIN again: ");
-  char new_pin2[8];
-  input(new_pin2, 6, 0,1);
-  clear_stdin_str(new_pin2);
-  if (new_pin2[0] == 'z')
-  {
-    printf("Invalid PIN entered. Exiting process\n\n\n");
-    return;
-  }
-  else if (strncmp(new_pin2, new_pin1, 6) != 0)
-  {
-    printf("PINs don't match. Exiting process\n\n\n");
-  }
-  else
-  {
-    char *enc_pin_new =(char *)malloc(sizeof(char) * 33);
-    encrypt(new_pin1, enc_pin_new);
-    strncpy(data[pos].pin, enc_pin_new, 32);
-    printf("PIN successfully changed to %s\n\n\n", new_pin1);
-    SAVE(data);
-
-    return;
-  }
 }
 
 void print_balance_admin(struct account data[])
@@ -1537,10 +1476,10 @@ void deposit_admin(struct account data[])
       return;
     }
     data[pos].balance += temp;
-    printf("Your balance now is %lld\n\n\n", data[pos].balance);
+    printf("Balance of user now is %lld\n\n\n", data[pos].balance);
 
     struct transact new_trans;
-    new_trans.type = 1;
+    new_trans.type = 4;
     new_trans.amount = temp;
     give_time(new_trans.time);
 
@@ -1599,7 +1538,7 @@ void withdraw_admin(struct account data[])
           return;
         }
         data[pos].balance -= temp;
-        printf("Your balance now is %lld\n\n\n", data[pos].balance);
+        printf("Balance of user now is %lld\n\n\n", data[pos].balance);
 
         struct transact new_trans;
         new_trans.type = 0;
@@ -1650,6 +1589,7 @@ void print_history_admin(struct account data[])
     else if(data[pos].info[i].type == 0) printf("Withdrawal of %lld made on %s\n", data[pos].info[i].amount,data[pos].info[i].time);
     else if(data[pos].info[i].type==2) printf("Transaction of %lld made to %s on %s\n", data[pos].info[i].amount,data[pos].info[i].person, data[pos].info[i].time);
     else if(data[pos].info[i].type==3) printf("Transaction of %lld made from %s on %s\n", data[pos].info[i].amount,data[pos].info[i].person, data[pos].info[i].time);
+    else if (data[pos].info[i].type == 4) printf("Deposit of %lld made by admin on %s\n", data[pos].info[i].amount,data[pos].info[i].time);
   }
 }
 
@@ -1725,7 +1665,7 @@ void make_transaction_admin(struct account data[])
         break;
       }
       data[pos].balance -= temp;
-      printf("Your balance now is %lld\n\n\n", data[pos].balance);
+      printf("Balance of user now is %lld\n\n\n", data[pos].balance);
       data[pos2].balance += temp;
 
       struct transact new_trans;
@@ -1804,7 +1744,7 @@ void create_fd_admin(struct account data[])
       return;
     }
     data[pos].balance -= temp;
-    printf("Your balance now is %lld\n\n\n", data[pos].balance);
+    printf("Balance of user now is %lld\n\n\n", data[pos].balance);
 
     data[pos].fd += temp;
     SAVE(data);
@@ -1840,12 +1780,12 @@ void liquidate_fd_admin(struct account data[])
 
   data[pos].balance += data[pos].fd;
   data[pos].fd = 0;
-  printf("Your balance now is %lld\n\n\n", data[pos].balance);
+  printf("Balance of user now is %lld\n\n\n", data[pos].balance);
 }
 
 void admin(struct account data[])
 {
-    printf("\nLogging in as ADMIN\n\n");
+    printf("Logged in as ADMIN\n\n");
     
     int query = -1;
     // clear_stdin();
