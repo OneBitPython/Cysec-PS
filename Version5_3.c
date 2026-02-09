@@ -480,6 +480,7 @@ int input_num(int len, int mode)
   //mode = 0 means it has to be exactly 'len' length, otherwise it can be anything less than equal to 'len'
   char toinput[len+1];
   toinput[len] = '\0';
+  int flag = 0;
   int to_return = 0;
   for (int i = 0 ; i < len ; i++)
   {
@@ -502,10 +503,14 @@ int input_num(int len, int mode)
           clear_stdin_str(toinput);
           return to_return;
         }
-        return -1;
-        clear_stdin();
+        flag = 1;
       }
     }
+  }
+  if (flag == 1)
+  {
+    clear_stdin_str(toinput);
+    return -1;
   }
   clear_stdin();
   return to_return;
