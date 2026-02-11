@@ -74,11 +74,40 @@ void print_stream()
     }
 }
 
+void shiftRows(int state[4][4])
+{
+  // printf("Shift Rows\n");
+  for (int i = 0 ; i < 4 ; i++)
+  {
+    int arr[4];
+    for (int j = 0 ; j < 4 ; j++)
+    {
+      arr[j] = state[i][(j+i)%4];
+    }
+    for (int j = 0 ; j < 4 ; j++)
+    {
+      state[i][j] = arr[j];
+    }
+  }
+}
+
 int main()
 {
-    char *s = (char *)malloc(sizeof(char) * 11);
-    char *str = (char *)malloc(sizeof(char) * 6);
-    fgets(s, 11, stdin);
-    clear_stdin_str(s);
-    printf("%d\n", strlen(s));
+  int state[4][4];
+  for (int i = 0 ; i < 4 ; i++)
+  {
+    for (int j = 0 ; j < 4 ; j++)
+    {
+      scanf("%d", &state[i][j]);
+    }
+  }
+  shiftRows(state);
+  for (int i = 0 ; i < 4 ; i++)
+  {
+    for (int j = 0 ; j < 4 ; j++)
+    {
+      printf("%d ", state[i][j]);
+    }
+    printf("\n");
+  }
 }

@@ -258,6 +258,10 @@ void shiftRows(int state[4][4])
     {
       arr[j] = state[i][(j+i)%4];
     }
+    for (int j = 0 ; j < 4 ; j++)
+    {
+      state[i][j] = arr[j];
+    }
   }
 }
 
