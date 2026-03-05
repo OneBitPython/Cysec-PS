@@ -7,7 +7,7 @@
 #define USER_MAX 32
 #define MAXT 50
 #define INT_MAX 2147483647
-#define MAX_LOANS 1
+#define MAX_LOANS 2
 #define INTEREST_PER 3
 
 int curr;
@@ -47,6 +47,7 @@ struct transact {
 
 struct loan_data {
   int loan_amt;
+  int loan_interest_per;
   char time[32];
 };
 
@@ -536,6 +537,7 @@ void update_loan_interest_amount(struct account data[]) {
   while (data[temp_num].username[0] != '\0') {
     acc_interest = 0;
     for (int i = 0; i < data[temp_num].num_loans; i++) {
+      day = 0;
       sscanf(data[temp_num].loan_info[i].time, "%d/%d/%d %d:%d:%d", &temp_day,
              &temp_month, &temp1, &temp2, &temp3, &temp4);
       for (int j = 0; j < (temp_month - 1); j++) {
@@ -544,12 +546,41 @@ void update_loan_interest_amount(struct account data[]) {
       day += temp_day;
 
       if (temp_day != day_now) {
+        data[temp_num].loan_info[i].loan_interest_per =
+            INTEREST_PER * (day_now - day) *
+            data[temp_num].loan_info[i].loan_amt / 100;
         acc_interest += INTEREST_PER * (day_now - day) *
                         data[temp_num].loan_info[i].loan_amt / 100;
       }
     }
     data[temp_num].interest_loan = acc_interest;
     temp_num++;
+  }
+}
+
+int check_time_limit_loan_repayment(struct account data[], int pos,
+                                    int loan_num) {
+  time_t now = time(NULL);
+  struct tm *time_now = localtime(&now);
+  int day_now = time_now->tm_yday + 1;
+  int final_time_now =
+      time_now->tm_hour * 3600 + time_now->tm_min * 60 + time_now->tm_sec;
+  int temp_day, temp_month, temp_year, temp_hour, temp_min, temp_sec, day,
+      final_time;
+  day = 0;
+  sscanf(data[pos].loan_info[loan_num].time, "%d/%d/%d %d:%d:%d", &temp_day,
+         &temp_month, &temp_year, &temp_hour, &temp_min, &temp_sec);
+  final_time = 0;
+  final_time = temp_hour * 3600 + temp_min * 60 + temp_sec;
+  for (int i = 0; i < (temp_month - 1); i++) {
+    day += num_days_per_month[i];
+  }
+  day += temp_day;
+  int time_diff = (day_now - day) * 86400 - final_time + final_time_now;
+  if (time_diff >= 86400) {
+    return 1;
+  } else {
+    return 0;
   }
 }
 
@@ -567,6 +598,7 @@ void loan(struct account data[]) {
   }
   if (pos == -1) {
     printf("No such user exists\n\n\n");
+    return;
   }
   int times = 0;
   while (times <= 3) {
@@ -591,6 +623,77 @@ void loan(struct account data[]) {
       }
     } else {
       printf("Successfully logged into account \n\n");
+      if (data[pos].loan_amt_total > 0) {
+        printf("Do you want to repay existing loans? (Enter y for yes)[case "
+               "sensitive]\n(Enter anything else if you want to take a loan "
+               "from the admin) "
+               ": ");
+        char repay_loan_option[3];
+        fgets(repay_loan_option, 2, stdin);
+        clear_stdin_str(repay_loan_option);
+        if (strncmp(repay_loan_option, "y", 2) == 0) {
+          int possible_repayable_loan_indexes[MAX_LOANS] = {0};
+          for (int temp_var = 0; temp_var < data[pos].num_loans; temp_var++) {
+            if (check_time_limit_loan_repayment(data, pos, temp_var)) {
+              possible_repayable_loan_indexes[temp_var] = 1;
+            }
+          }
+          update_loan_interest_amount(data);
+          int found_atleast_one_repayable_loan = 0;
+          for (int i = 0; i < data[pos].num_loans; i++) {
+            if (possible_repayable_loan_indexes[i]) {
+              found_atleast_one_repayable_loan = 1;
+              break;
+            }
+          }
+          if (!found_atleast_one_repayable_loan) {
+            printf("No Repayable loan found \n\n\n");
+            return;
+          }
+          printf("These are the possible loans you can repay : \n");
+          printf("Index | Loan Principal | Loan Interest\n");
+          for (int i = 0; i < data[pos].num_loans; i++) {
+            if (possible_repayable_loan_indexes[i]) {
+              printf("  %-4d|      %-10d|      %-8d\n", i,
+                     data[pos].loan_info[i].loan_amt,
+                     data[pos].loan_info[i].loan_interest_per);
+            }
+          }
+          printf("Please enter the index of the loan you want to repay : ");
+          int repay_loan_num;
+          repay_loan_num = input_num(2, 1);
+          if (possible_repayable_loan_indexes[repay_loan_num] == 1) {
+            if (data[pos].balance >=
+                (data[pos].loan_info[repay_loan_num].loan_amt +
+                 data[pos].loan_info[repay_loan_num].loan_interest_per)) {
+              data[pos].balance -=
+                  (data[pos].loan_info[repay_loan_num].loan_amt +
+                   data[pos].loan_info[repay_loan_num].loan_interest_per);
+              data[pos].loan_amt_total -=
+                  data[pos].loan_info[repay_loan_num].loan_amt;
+              data[pos].interest_loan -=
+                  data[pos].loan_info[repay_loan_num].loan_interest_per;
+              for (int i = repay_loan_num; i < (data[pos].num_loans - 1); i++) {
+                data[pos].loan_info[i] = data[pos].loan_info[i + 1];
+              }
+              data[pos].num_loans -= 1;
+              printf("Successfully Repaid Loan\n\n");
+              return;
+            } else {
+              printf("Insufficient Balance to repay back the loan.\n");
+              printf("Current Balance : %d\n", data[pos].balance);
+              printf("Amount required to repay loan : %d",
+                     data[pos].loan_info[repay_loan_num].loan_amt +
+                         data[pos].loan_info[repay_loan_num].loan_interest_per);
+              printf("\n\n\n");
+              return;
+            }
+          } else {
+            printf("Invalid index entered\n\n\n");
+            return;
+          }
+        }
+      }
       printf("Enter the amount you want to loan from the admin\n");
       char loan_amount[11];
       input(loan_amount, 9, 1, 0);
