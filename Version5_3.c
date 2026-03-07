@@ -47,7 +47,7 @@ struct transact {
 
 struct loan_data {
   int loan_amt;
-  int loan_interest_per;
+  float loan_interest_per;
   char time[32];
 };
 
@@ -57,7 +57,7 @@ struct account {
   char cvv[4];
   char pin[33];
   int balance;
-  int interest_loan;
+  float interest_loan;
   int loan_amt_total;
   int num_loans;
   int fd;
@@ -72,6 +72,14 @@ void give_time(char buf[]) {
 
   struct tm *tm = localtime(&now);
   strftime(buf, 32, "%d/%m/%Y %H:%M:%S", tm);
+}
+
+float power(float x, int y) {
+  float out = 1;
+  for (int i = 0; i < y; i++) {
+    out *= x;
+  }
+  return out;
 }
 
 void print_menu() {
@@ -532,7 +540,7 @@ void update_loan_interest_amount(struct account data[]) {
   int day_now =
       time_now->tm_yday + 1; // yday!=yesterday yday = num from 0 to 365
   int temp_day, temp_month, temp1, temp2, temp3, temp4, day;
-  int acc_interest;
+  float acc_interest;
   day = 0;
   while (data[temp_num].username[0] != '\0') {
     acc_interest = 0;
@@ -546,11 +554,14 @@ void update_loan_interest_amount(struct account data[]) {
       day += temp_day;
 
       if (temp_day != day_now) {
-        data[temp_num].loan_info[i].loan_interest_per =
-            INTEREST_PER * (day_now - day) *
-            data[temp_num].loan_info[i].loan_amt / 100;
-        acc_interest += INTEREST_PER * (day_now - day) *
-                        data[temp_num].loan_info[i].loan_amt / 100;
+        float temp_interest = 0;
+        temp_interest = (float)data[temp_num].loan_info[i].loan_amt *
+                        power((1 + (float)INTEREST_PER / 100), (day_now - day));
+        // printf("%f", power((1 + (float)INTEREST_PER / 100), (day_now -
+        // day)));
+        temp_interest -= (float)data[temp_num].loan_info[i].loan_amt;
+        data[temp_num].loan_info[i].loan_interest_per = temp_interest;
+        acc_interest += temp_interest;
       }
     }
     data[temp_num].interest_loan = acc_interest;
@@ -656,7 +667,7 @@ void loan(struct account data[]) {
             if (possible_repayable_loan_indexes[i]) {
               printf("  %-4d|      %-10d|      %-8d\n", i,
                      data[pos].loan_info[i].loan_amt,
-                     data[pos].loan_info[i].loan_interest_per);
+                     (int)data[pos].loan_info[i].loan_interest_per);
             }
           }
           printf("Please enter the index of the loan you want to repay : ");
@@ -665,12 +676,12 @@ void loan(struct account data[]) {
           if (possible_repayable_loan_indexes[repay_loan_num] == 1) {
             if (data[pos].balance >=
                 (data[pos].loan_info[repay_loan_num].loan_amt +
-                 data[pos].loan_info[repay_loan_num].loan_interest_per)) {
+                 (int)data[pos].loan_info[repay_loan_num].loan_interest_per)) {
               data[pos].balance -=
                   (data[pos].loan_info[repay_loan_num].loan_amt +
-                   data[pos].loan_info[repay_loan_num].loan_interest_per);
+                   (int)data[pos].loan_info[repay_loan_num].loan_interest_per);
               data[pos].loan_amt_total -=
-                  data[pos].loan_info[repay_loan_num].loan_amt;
+                  (int)data[pos].loan_info[repay_loan_num].loan_amt;
               data[pos].interest_loan -=
                   data[pos].loan_info[repay_loan_num].loan_interest_per;
               for (int i = repay_loan_num; i < (data[pos].num_loans - 1); i++) {
@@ -684,7 +695,9 @@ void loan(struct account data[]) {
               printf("Current Balance : %d\n", data[pos].balance);
               printf("Amount required to repay loan : %d",
                      data[pos].loan_info[repay_loan_num].loan_amt +
-                         data[pos].loan_info[repay_loan_num].loan_interest_per);
+                         (int)data[pos]
+                             .loan_info[repay_loan_num]
+                             .loan_interest_per);
               printf("\n\n\n");
               return;
             }
