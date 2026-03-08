@@ -9,6 +9,9 @@
 #define INT_MAX 2147483647
 #define MAX_LOANS 2
 #define INTEREST_PER 3
+#define INTEREST_FD 2.5
+#define INTEREST_CREDIT_CARD 2
+#define CREDIT_CARD_MONTH 5
 
 int curr;
 char ad[5] = "ADMIN";
@@ -53,18 +56,22 @@ struct loan_data {
 
 struct account {
   char username[USER_MAX + 1];
-  char pan[17];
-  char cvv[4];
+  char pan[33];
+  char cvv[33];
   char pin[33];
+  int credit_card_balance;
+  int credit_card_days;
   int balance;
-  float interest_loan;
+  int active;
   int loan_amt_total;
   int num_loans;
   int fd;
-  int interest_fd;
+  int credit_card_amounts[CREDIT_CARD_MONTH];
+  float interest_loan;
+  char time_fd[32];
+  char credit_card_start_time[32];
   struct loan_data loan_info[MAX_LOANS];
   struct transact info[MAXT];
-  int active;
 };
 
 void give_time(char buf[]) {
@@ -98,7 +105,8 @@ void print_menu() {
   printf("9) Create an FD\n");
   printf("10) Liquidate an FD\n");
   printf("11) Log in as admin\n");
-  printf("12) Exit\n");
+  printf("12) Withdraw from Credit Card\n");
+  printf("13) Exit\n");
   printf("Query: ");
 }
 
@@ -515,10 +523,33 @@ void new_acc(struct account data[], int *cur) {
       printf("Enter valid pin\n\n");
       free(temp_pin);
     } else {
-      printf("Successfully set PIN to %s\n\n\n", temp_pin);
+      printf("Successfully set PIN to %s\n", temp_pin);
       (*cur)++;
       encrypt(temp_pin, data[curr].pin);
       free(temp_pin);
+      char pan_temp[13];
+      pan_temp[12] = '\0';
+      int count = 0;
+      while (count < 12) {
+        int r = (int)(9999 * ((float)rand() / (float)RAND_MAX));
+        for (int i = 0 ; i < 4 ; i++) {
+          pan_temp[count] = (char) ((r%10) + '0');
+          r /= 10;
+          count++;
+        }
+      }
+      char cvv_temp[4];
+      cvv_temp[3] = '\0';
+      int r = (int)(999 * ((float)rand() / (float)RAND_MAX));
+      for (int i = 0 ; i < 3 ; i++) {
+        cvv_temp[i] = (char) ((r%10) + '0');
+        r /= 10;
+      }
+      encrypt(pan_temp, data[curr].pan);
+      encrypt(cvv_temp, data[curr].cvv);
+      printf("Your PAN number is %s\n", pan_temp);
+      printf("Your CVV number is %s\n", cvv_temp);
+      printf("These numbers will not be shown again. CVV and PAN can't be reset\n\n\n");
       SAVE(data);
       break;
     }
@@ -594,6 +625,204 @@ int check_time_limit_loan_repayment(struct account data[], int pos,
     return 0;
   }
 }
+
+
+int check_time_fd_liquidation(struct account data[], int pos) {
+  time_t now = time(NULL);
+  struct tm *time_now = localtime(&now);
+  int day_now = time_now->tm_yday + 1;
+  int final_time_now =
+      time_now->tm_hour * 3600 + time_now->tm_min * 60 + time_now->tm_sec;
+  int temp_day, temp_month, temp_year, temp_hour, temp_min, temp_sec, day,
+      final_time;
+  day = 0;
+  sscanf(data[pos].time_fd, "%d/%d/%d %d:%d:%d", &temp_day,
+         &temp_month, &temp_year, &temp_hour, &temp_min, &temp_sec);
+  final_time = 0;
+  final_time = temp_hour * 3600 + temp_min * 60 + temp_sec;
+  for (int i = 0; i < (temp_month - 1); i++) {
+    day += num_days_per_month[i];
+  }
+  day += temp_day;
+  int time_diff = (day_now - day) * 86400 - final_time + final_time_now;
+  if (time_diff >= 86400) {
+    return time_diff;
+  } else {
+    return 0;
+  }
+}
+
+
+int check_time_credit_card(struct account data[], int pos) {
+  time_t now = time(NULL);
+  struct tm *time_now = localtime(&now);
+  int day_now = time_now->tm_yday + 1;
+  int final_time_now =
+      time_now->tm_hour * 3600 + time_now->tm_min * 60 + time_now->tm_sec;
+  int temp_day, temp_month, temp_year, temp_hour, temp_min, temp_sec, day,
+      final_time;
+  day = 0;
+  sscanf(data[pos].credit_card_start_time, "%d/%d/%d %d:%d:%d", &temp_day,
+         &temp_month, &temp_year, &temp_hour, &temp_min, &temp_sec);
+  for (int i = 0; i < (temp_month - 1); i++) {
+    day += num_days_per_month[i];
+  }
+  day += temp_day;
+  if(day_now!=day){
+    return (day_now-day);
+  }
+  else{
+    return 0;
+  }
+}
+
+
+void withdraw_from_credit_card(struct account data[]){
+  printf("Enter your username: ");
+  char user[USER_MAX + 2];
+  fgets(user, (USER_MAX + 1), stdin);
+  clear_stdin_str(user);
+
+  int pos = -1;
+  for (int i = 0; i < curr; i++) {
+    if (strncmp(data[i].username, user, USER_MAX) == 0) {
+      pos = i;
+      break;
+    }
+  }
+
+  if (pos == -1) {
+    printf("No such user\n\n\n");
+    return;
+  }
+  int times = 0;
+  while (times < 3) {
+    times++;
+    printf("Enter the PIN: ");
+    char temp_pin[8];
+    input(temp_pin, 6, 0, 1);
+    clear_stdin_str(temp_pin);
+    char *enc = (char *)malloc(sizeof(char) * 33);
+    encrypt(temp_pin, enc);
+    if (temp_pin[0] == 'z') {
+      if (times != 3) {
+        delay_random();
+        printf("Invalid PIN, ");
+        free(enc);
+      } else {
+        delay_random();
+        printf("3 attempts exhausted\n\n\n");
+        free(enc);
+      }
+    } else if (strncmp(data[pos].pin, enc, 32) != 0) {
+      if (times != 3) {
+        delay_random();
+        printf("PIN doesn't match, ");
+        free(enc);
+      } else {
+        delay_random();
+        printf("3 attempts exhausted\n\n\n");
+        free(enc);
+      }
+    } 
+    else {
+      printf("Successfully logged in to account\n\n");
+      printf("Please enter the amount you want to withdraw(from your credit card):\n");
+      char withdraw[11];
+      input(withdraw,9,1,0);
+      clear_stdin_str(withdraw);
+      if(withdraw[0]=='z'){
+        printf("Invalid number enetered \n\n");
+      }
+      else{
+        int temp=0;
+        for(int i=0;i<strlen(withdraw);i++){
+          temp*=10;
+          temp+=withdraw[i]-'0';
+        }
+        if(temp == 0){
+          printf("Please enter a non-zero amount");
+          return;
+        }
+        if(data[pos].credit_card_start_time[0] == '\0'){
+          give_time(data[pos].credit_card_start_time);
+          data[pos].credit_card_balance=0;
+          data[pos].credit_card_days=0;
+          for(int i =0;i<CREDIT_CARD_MONTH;i++){
+            data[pos].credit_card_amounts[i] = 0;
+          }
+          SAVE(data);
+        }
+        if(check_time_credit_card(data,pos)==0){
+          data[pos].credit_card_amounts[data[pos].credit_card_days] +=temp;
+          data[pos].credit_card_balance+=temp;
+          if(data[pos].credit_card_balance > 500){
+            printf("Entered amount causes credit card balance to exceed 500 points . NOT Processing Withdrawal \n\n");
+            data[pos].credit_card_balance-=temp;
+            data[pos].credit_card_amounts[data[pos].credit_card_days]-=temp;
+            SAVE(data);
+            return;
+          }
+          data[pos].balance+=temp;
+          SAVE(data);
+          return;
+        }
+        if(check_time_credit_card(data, pos) != 0){
+          data[pos].credit_card_days=check_time_credit_card(data, pos);
+          if(data[pos].credit_card_days < 5){
+            data[pos].credit_card_amounts[data[pos].credit_card_days] +=temp;
+            data[pos].credit_card_balance+=temp;
+            if(data[pos].credit_card_balance > 500){
+              printf("Entered amount causes credit card balance to exceed 500 points . NOT Processing Withdrawal \n\n");
+              data[pos].credit_card_balance-=temp;
+              data[pos].credit_card_amounts[data[pos].credit_card_days]-=temp;
+              SAVE(data);
+              return;
+            }
+            data[pos].balance+=temp;
+            SAVE(data);
+            return;
+          }
+          else{
+            printf("The Credit Card month has ended . Forcing Repayment of Credit card amount ");
+            printf("Credit Card Amount was : %d\n",data[pos].credit_card_balance);
+            float interest = 0;
+            float temp_val = 0;
+            for(int i =0;i<CREDIT_CARD_MONTH;i++){
+              temp_val+=data[pos].credit_card_amounts[i];
+              interest += (float)(temp_val+interest)*(float)INTEREST_CREDIT_CARD/100;
+            }
+            printf("Credit Card Interest was : %d\n",(int)interest);
+            if(data[pos].balance<=(data[pos].credit_card_balance+interest)){
+              printf("Sufficient Balance was found , Automatically deducting the required amount from account balance\n");
+              data[pos].balance-=data[pos].credit_card_balance;
+              data[pos].balance-=(int)interest;
+            }
+            else{
+              printf("Insufficient balance was found , Automatially removing all the balance left in the account\n");
+              data[pos].balance = 0;
+            }
+            data[pos].credit_card_start_time[0]='\0';
+            SAVE(data);
+            return;
+          }
+        }
+        
+        // printf("%s",data[pos].credit_card_start_time);
+        // give_time(data[pos].credit_card_start_time);
+        // if(data[pos].credit_card_start_time[0] == '\0'){
+          // printf("Not started ;-;\n");
+        // }
+        // printf("%d",data[pos].credit_card_days);
+        // printf("%d",data[pos].credit_card_balance);
+        // printf("%d",data[pos].credit_card_amounts[0]);
+        break;
+      }
+    }
+  }
+}
+
+
 
 void loan(struct account data[]) {
   printf("Enter your username:");
@@ -718,6 +947,10 @@ void loan(struct account data[]) {
         for (int i = 0; i < strlen(loan_amount); i++) {
           temp *= 10;
           temp += loan_amount[i] - '0';
+        }
+        if(temp == 0){
+          printf("Please enter a non zero amount\n\n\n");
+          return;
         }
         if ((data[pos].loan_amt_total + temp) >
             500) { // im assuming each point corresponds to 1 currency
@@ -885,8 +1118,19 @@ void liquidate_fd(struct account data[]) {
     } else {
       printf("Successfully logged in to account\n\n");
       printf("Current balance is %lld. ", data[pos].balance);
-
-      data[pos].balance += data[pos].fd;
+      if(data[pos].fd == 0){
+        printf("There is no existing fd . Please Create an fd first\n\n\n");
+        return;
+      }
+      if(check_time_fd_liquidation(data, pos)==0){
+        printf("Please wait 1 day before trying to liquidate fd\n\n\n");
+        return;
+      }
+      int time_diff =  check_time_fd_liquidation(data, pos);
+      int day_diff = time_diff/86400;
+      int interest_fd_temp = (int)data[pos].fd*power((1+(float)INTEREST_FD/100),day_diff)-data[pos].fd;
+      printf("Successfully Liquidated FD amount of %d and interest of %d\n",data[pos].fd,interest_fd_temp);
+      data[pos].balance+=data[pos].fd+interest_fd_temp;
       data[pos].fd = 0;
       printf("Your balance now is %lld\n\n\n", data[pos].balance);
       SAVE(data);
@@ -943,6 +1187,10 @@ void create_fd(struct account data[]) {
       printf("PIN doesn't match, ");
     } else {
       printf("Successfully logged in to account\n\n");
+      if(data[pos].fd != 0){
+        printf("Account already has an FD . Please liquidate the existing fd before creating a new one \n\n\n");
+        return;
+      }
       printf(
           "Current balance is %lld. Enter the amount you want to add to FD : ",
           data[pos].balance);
@@ -959,14 +1207,18 @@ void create_fd(struct account data[]) {
           temp *= 10;
           temp += withdraw[i] - '0';
         }
+        if(temp == 0){
+          printf("Please enter a non-zero amount\n\n\n");
+          return;
+        }
         if (data[pos].balance < temp) {
           printf("Insufficient funds.\n\n\n");
           break;
         }
         data[pos].balance -= temp;
+        data[pos].fd= temp;
+        give_time(data[pos].time_fd);
         printf("Your balance now is %lld\n\n\n", data[pos].balance);
-
-        data[pos].fd += temp;
         SAVE(data);
         free(enc_pin);
 
@@ -1845,6 +2097,7 @@ void admin(struct account data[]) {
 }
 
 int main() {
+  srand(time(NULL));
   struct account data[MAX];
   int query = -1;
 
@@ -1919,8 +2172,10 @@ int main() {
       }
       admin(data);
       break;
-
     case 12:
+      withdraw_from_credit_card(data);
+      break;
+    case 13:
       done = 1;
       break;
 
